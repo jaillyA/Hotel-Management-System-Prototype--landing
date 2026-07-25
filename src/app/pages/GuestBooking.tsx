@@ -4,22 +4,27 @@ import {
 } from "lucide-react";
 
 import { CREAM, GOLD, NAVY, mono, sans, serif } from "../theme";
-import { GoldBtn, OutlineBtn, inputClass, labelClass } from "../components/shared";
+import { GoldBtn, OutlineBtn, formatDateBR, inputClass, labelClass } from "../components/shared";
 import { ApiError, api } from "../lib/api";
 import type { Reservation, Room, RoomCatalogEntry, RoomType } from "../lib/types";
+import type { BookingSearchParams } from "./LandingPage";
 
 type Step = "search" | "select" | "form" | "done";
 
-function formatDateBR(iso: string): string {
-  const [year, month, day] = iso.split("-");
-  return `${day}/${month}/${year}`;
-}
-
-export function GuestBooking({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
-  const [step, setStep] = useState<Step>("search");
-  const [checkin, setCI] = useState("");
-  const [checkout, setCO] = useState("");
-  const [pax, setPax] = useState(2);
+export function GuestBooking({
+  initial,
+  onBack,
+  onDone,
+}: {
+  initial?: BookingSearchParams;
+  onBack: () => void;
+  onDone: () => void;
+}) {
+  const hasInitialSearch = Boolean(initial?.checkin && initial?.checkout);
+  const [step, setStep] = useState<Step>(hasInitialSearch ? "select" : "search");
+  const [checkin, setCI] = useState(initial?.checkin ?? "");
+  const [checkout, setCO] = useState(initial?.checkout ?? "");
+  const [pax, setPax] = useState(initial?.pax ?? 2);
   const [typeF, setTypeF] = useState<RoomType | "Todos">("Todos");
   const [picked, setPicked] = useState<Room | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", cpf: "", notes: "" });

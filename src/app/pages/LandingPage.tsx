@@ -29,12 +29,18 @@ const testimonials = [
   { name: "Isabela Teixeira", city: "Florianópolis, SC", init: "IT", stars: 5, text: "Hotel impecável. Ambiente sofisticado, limpeza primorosa e localização perfeita. O serviço de concierge resolveu todos os meus compromissos com agilidade e profissionalismo." },
 ];
 
+export interface BookingSearchParams {
+  checkin: string;
+  checkout: string;
+  pax: number;
+}
+
 export function LandingPage({
   onBook,
   onPortal,
   onStaff,
 }: {
-  onBook: () => void;
+  onBook: (params?: BookingSearchParams) => void;
   onPortal: () => void;
   onStaff: () => void;
 }) {
@@ -74,7 +80,7 @@ export function LandingPage({
             <button onClick={onPortal} className="text-sm font-medium hover:opacity-60 transition-opacity" style={{ color: scrolled ? NAVY : "white" }}>
               Minhas Reservas
             </button>
-            <GoldBtn onClick={onBook} sm>Reservar Agora</GoldBtn>
+            <GoldBtn onClick={() => onBook()} sm>Reservar Agora</GoldBtn>
             <button onClick={onStaff} className="text-xs font-medium opacity-40 hover:opacity-70 transition-opacity" style={{ color: scrolled ? NAVY : "white" }}>
               Staff
             </button>
@@ -92,7 +98,7 @@ export function LandingPage({
             ))}
             <div className="pt-3 border-t border-border space-y-2">
               <button onClick={onPortal} className="block text-sm text-muted-foreground py-1">Minhas Reservas</button>
-              <GoldBtn onClick={onBook} full>Reservar Agora</GoldBtn>
+              <GoldBtn onClick={() => onBook()} full>Reservar Agora</GoldBtn>
               <button onClick={onStaff} className="block text-xs text-muted-foreground py-1">Acesso Staff</button>
             </div>
           </div>
@@ -136,7 +142,7 @@ export function LandingPage({
                 </select>
               </div>
             </div>
-            <GoldBtn onClick={onBook} full lg>
+            <GoldBtn onClick={() => onBook({ checkin, checkout, pax })} full lg>
               <Search size={17} />Verificar Disponibilidade
             </GoldBtn>
           </div>
@@ -194,7 +200,7 @@ export function LandingPage({
                     </div>
                   ))}
                 </div>
-                <button onClick={onBook}
+                <button onClick={() => onBook()}
                   className="w-full py-2 rounded border text-xs font-semibold transition-all"
                   style={{ borderColor: GOLD, color: GOLD }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = GOLD; (e.currentTarget as HTMLElement).style.color = "white"; }}
@@ -276,7 +282,7 @@ export function LandingPage({
           <h2 className="text-4xl font-bold text-white mb-4" style={{ fontFamily: serif }}>Sua Próxima Estadia Inesquecível</h2>
           <p className="text-white/60 mb-9 max-w-md mx-auto text-sm leading-relaxed">Disponibilidade limitada. Reserve hoje e garanta a melhor tarifa com cancelamento gratuito em até 48h antes do check-in.</p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            <GoldBtn onClick={onBook} lg>Verificar Disponibilidade</GoldBtn>
+            <GoldBtn onClick={() => onBook()} lg>Verificar Disponibilidade</GoldBtn>
             <OutlineBtn onClick={onPortal} dark>Já tenho uma reserva</OutlineBtn>
           </div>
         </div>

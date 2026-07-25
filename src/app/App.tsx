@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { LandingPage } from "./pages/LandingPage";
+import { LandingPage, type BookingSearchParams } from "./pages/LandingPage";
 import { GuestBooking } from "./pages/GuestBooking";
 import { GuestPortal } from "./pages/GuestPortal";
 import { StaffLogin } from "./pages/StaffLogin";
@@ -12,6 +12,12 @@ type AppPage = "landing" | "guest-book" | "guest-portal" | "staff-login" | "staf
 export default function App() {
   const [session, setSession] = useState<Session | null>(() => loadSession());
   const [page, setPage] = useState<AppPage>(() => (loadSession() ? "staff-portal" : "landing"));
+  const [bookingParams, setBookingParams] = useState<BookingSearchParams | undefined>();
+
+  function handleBook(params?: BookingSearchParams) {
+    setBookingParams(params);
+    setPage("guest-book");
+  }
 
   function handleLogin() {
     setSession(loadSession());
@@ -26,9 +32,9 @@ export default function App() {
 
   switch (page) {
     case "landing":
-      return <LandingPage onBook={() => setPage("guest-book")} onPortal={() => setPage("guest-portal")} onStaff={() => setPage("staff-login")} />;
+      return <LandingPage onBook={handleBook} onPortal={() => setPage("guest-portal")} onStaff={() => setPage("staff-login")} />;
     case "guest-book":
-      return <GuestBooking onBack={() => setPage("landing")} onDone={() => setPage("guest-portal")} />;
+      return <GuestBooking initial={bookingParams} onBack={() => setPage("landing")} onDone={() => setPage("guest-portal")} />;
     case "guest-portal":
       return <GuestPortal onBack={() => setPage("landing")} />;
     case "staff-login":
@@ -40,6 +46,6 @@ export default function App() {
         <StaffLogin onLogin={handleLogin} onBack={() => setPage("landing")} />
       );
     default:
-      return <LandingPage onBook={() => setPage("guest-book")} onPortal={() => setPage("guest-portal")} onStaff={() => setPage("staff-login")} />;
+      return <LandingPage onBook={handleBook} onPortal={() => setPage("guest-portal")} onStaff={() => setPage("staff-login")} />;
   }
 }

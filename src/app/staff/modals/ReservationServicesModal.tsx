@@ -15,7 +15,8 @@ export function ReservationServicesModal({
   onClose: () => void;
 }) {
   const { role } = useStaffAuth();
-  const canManage = role === "administrador" || role === "gerente" || role === "recepcionista";
+  const isTerminal = reservation.status === "cancelada" || reservation.status === "checkout";
+  const canManage = (role === "administrador" || role === "gerente" || role === "recepcionista") && !isTerminal;
 
   const [consumptions, setConsumptions] = useState<Consumption[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -132,6 +133,11 @@ export function ReservationServicesModal({
                   {saving ? "..." : "Adicionar"}
                 </GoldBtn>
               </div>
+            )}
+            {isTerminal && (
+              <p className="text-xs text-muted-foreground pt-2 border-t border-border">
+                Esta reserva está {reservation.status === "cancelada" ? "cancelada" : "encerrada"} — não é possível lançar novos serviços.
+              </p>
             )}
           </>
         )}

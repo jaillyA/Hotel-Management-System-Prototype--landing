@@ -171,3 +171,8 @@ export const inputClass =
   "w-full bg-input-background border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30";
 
 export const labelClass = "text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1.5";
+
+export function formatDateBR(iso: string): string {
+  const [year, month, day] = iso.split("-");
+  return `${day}/${month}/${year}`;
+}

@@ -53,6 +53,10 @@ export function GuestsView() {
       {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando hóspedes...</p>
+      ) : guests.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-8 text-center">
+          {q ? `Nenhum hóspede encontrado para "${q}".` : "Nenhum hóspede cadastrado ainda."}
+        </p>
       ) : (
         <div className="bg-card rounded-lg border border-border overflow-hidden">
           <div className="hidden md:grid grid-cols-[2fr_2fr_1fr_1fr_auto] gap-4 px-4 py-2.5 bg-muted border-b border-border text-xs font-medium text-muted-foreground uppercase tracking-wide">

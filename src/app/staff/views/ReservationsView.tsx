@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, ChevronRight, Eye, LogOut, Search, X } from "lucide-react";
+import { BedDouble, CalendarSearch, CheckCircle2, ChevronRight, Eye, LogOut, Search, X } from "lucide-react";
 
 import { NAVY, serif } from "../../theme";
-import { ResBadge, SHeader, resStatusCfg } from "../../components/shared";
+import { GoldBtn, ResBadge, SHeader, formatDateBR, inputClass, labelClass, resStatusCfg } from "../../components/shared";
 import { ApiError, api } from "../../lib/api";
-import type { Reservation, ReservationStatus } from "../../lib/types";
+import type { Reservation, ReservationStatus, RoomCatalogEntry } from "../../lib/types";
 import { ReservationServicesModal } from "../modals/ReservationServicesModal";
 import { useStaffAuth } from "../AuthContext";
 
@@ -18,6 +18,14 @@ export function ReservationsView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewing, setViewing] = useState<Reservation | null>(null);
+
+  const [availabilityOpen, setAvailabilityOpen] = useState(false);
+  const [availCheckin, setAvailCheckin] = useState("");
+  const [availCheckout, setAvailCheckout] = useState("");
+  const [availPax, setAvailPax] = useState(1);
+  const [availResults, setAvailResults] = useState<RoomCatalogEntry[] | null>(null);
+  const [availLoading, setAvailLoading] = useState(false);
+  const [availError, setAvailError] = useState<string | null>(null);
 
   function refetch() {
     setLoading(true);
@@ -40,6 +48,27 @@ export function ReservationsView() {
     }
   }
 
+  async function handleSearchAvailability() {
+    if (!availCheckin || !availCheckout) {
+      setAvailError("Selecione as datas de check-in e check-out.");
+      return;
+    }
+    if (availCheckout <= availCheckin) {
+      setAvailError("O check-out deve ser depois do check-in.");
+      return;
+    }
+    setAvailLoading(true);
+    setAvailError(null);
+    try {
+      const results = await api.rooms.catalog(availCheckin, availCheckout, availPax);
+      setAvailResults(results);
+    } catch (err) {
+      setAvailError(err instanceof ApiError ? err.message : "Não foi possível consultar a disponibilidade.");
+    } finally {
+      setAvailLoading(false);
+    }
+  }
+
   const filtered = reservations.filter((r) => {
     if (!q) return true;
     const needle = q.toLowerCase();
@@ -52,7 +81,69 @@ export function ReservationsView() {
 
   return (
     <div>
-      <SHeader title="Reservas" sub="Gestão completa" />
+      <SHeader
+        title="Reservas"
+        sub="Gestão completa"
+        action={
+          <button
+            onClick={() => setAvailabilityOpen((v) => !v)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border border-border text-foreground hover:bg-muted transition-colors"
+          >
+            <CalendarSearch size={13} />
+            {availabilityOpen ? "Fechar busca" : "Verificar Disponibilidade"}
+          </button>
+        }
+      />
+
+      {availabilityOpen && (
+        <div className="bg-card rounded-lg border border-border p-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+            <div>
+              <label className={labelClass}>Check-in</label>
+              <input type="date" value={availCheckin} onChange={(e) => setAvailCheckin(e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Check-out</label>
+              <input type="date" value={availCheckout} onChange={(e) => setAvailCheckout(e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Hóspedes</label>
+              <input type="number" min={1} value={availPax} onChange={(e) => setAvailPax(Math.max(1, Number(e.target.value)))} className={inputClass} />
+            </div>
+            <GoldBtn onClick={handleSearchAvailability} disabled={availLoading} sm>
+              <Search size={13} />
+              {availLoading ? "Buscando..." : "Buscar"}
+            </GoldBtn>
+          </div>
+          {availError && <p className="text-xs text-red-500 mt-2">{availError}</p>}
+
+          {availResults && (
+            <div className="mt-4 space-y-1.5 max-h-72 overflow-y-auto">
+              {availResults.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">Nenhum quarto encontrado para esses critérios.</p>
+              ) : (
+                availResults.map((room) => (
+                  <div key={room.id} className="flex items-center justify-between px-3 py-2 bg-muted rounded-lg text-sm">
+                    <div className="flex items-center gap-2">
+                      <BedDouble size={13} className="text-muted-foreground" />
+                      <span className="font-medium">{room.type} — {room.number}</span>
+                      <span className="text-xs text-muted-foreground">Cap. {room.capacity}</span>
+                    </div>
+                    {room.available ? (
+                      <span className="text-xs font-medium" style={{ color: "#3d8c6e" }}>Disponível · R$ {room.price}/noite</span>
+                    ) : (
+                      <span className="text-xs font-medium" style={{ color: "#B83232" }}>
+                        {room.available_from ? `Indisponível — a partir de ${formatDateBR(room.available_from)}` : "Em manutenção"}
+                      </span>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <div className="flex gap-1 p-1 bg-muted rounded-lg w-fit flex-wrap">
           {(["todas", "confirmada", "pendente", "cancelada", "checkout"] as const).map((t) => (

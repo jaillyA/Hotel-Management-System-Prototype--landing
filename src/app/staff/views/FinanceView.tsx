@@ -26,7 +26,11 @@ export function FinanceView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ reservation_code: "", amount: "", payment_method: "pix" as PaymentMethod });
+  const [form, setForm] = useState<{ reservation_code: string; amount: string; payment_method: PaymentMethod | "" }>({
+    reservation_code: "",
+    amount: "",
+    payment_method: "",
+  });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -47,12 +51,16 @@ export function FinanceView() {
 
   async function handleRegisterPayment() {
     const amount = Number(form.amount);
-    if (!form.reservation_code) {
+    if (!form.reservation_code.trim()) {
       setFormError("Informe o código da reserva.");
       return;
     }
-    if (!amount || amount <= 0) {
+    if (!form.amount || !amount || amount <= 0) {
       setFormError("O valor do pagamento deve ser positivo.");
+      return;
+    }
+    if (!form.payment_method) {
+      setFormError("Selecione a forma de pagamento.");
       return;
     }
     setSaving(true);
@@ -63,7 +71,7 @@ export function FinanceView() {
         amount,
         payment_method: form.payment_method,
       });
-      setForm({ reservation_code: "", amount: "", payment_method: "pix" });
+      setForm({ reservation_code: "", amount: "", payment_method: "" });
       refetchPayments();
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : "Não foi possível registrar o pagamento.");
@@ -144,7 +152,7 @@ export function FinanceView() {
           <div className="bg-card rounded-lg border border-border p-4 mb-3">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
               <div>
-                <label className={labelClass}>Código da reserva</label>
+                <label className={labelClass}>Código da reserva *</label>
                 <input
                   value={form.reservation_code}
                   onChange={(e) => setForm({ ...form, reservation_code: e.target.value })}
@@ -153,7 +161,7 @@ export function FinanceView() {
                 />
               </div>
               <div>
-                <label className={labelClass}>Valor (R$)</label>
+                <label className={labelClass}>Valor (R$) *</label>
                 <input
                   type="number"
                   min={0.01}
@@ -164,12 +172,13 @@ export function FinanceView() {
                 />
               </div>
               <div>
-                <label className={labelClass}>Forma de pagamento</label>
+                <label className={labelClass}>Forma de pagamento *</label>
                 <select
                   value={form.payment_method}
                   onChange={(e) => setForm({ ...form, payment_method: e.target.value as PaymentMethod })}
                   className={inputClass}
                 >
+                  <option value="">Selecione...</option>
                   {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
                 </select>
               </div>
