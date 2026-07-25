@@ -79,11 +79,6 @@ export function StaffLogin({ onLogin, onBack }: { onLogin: () => void; onBack: (
             {error && <p className="text-xs text-red-500">{error}</p>}
             <GoldBtn onClick={submit} full disabled={loading}>{loading ? "Entrando..." : "Entrar no Sistema"}</GoldBtn>
           </div>
-          <div className="mt-5 p-3 rounded-lg bg-muted text-xs text-muted-foreground">
-            <p className="font-semibold mb-0.5">Acesso demonstração (dados do seed)</p>
-            <p>Email: ana.souza@hotel.com</p>
-            <p>Senha: demo1234</p>
-          </div>
           <div className="mt-5 flex items-center gap-1.5 text-xs text-muted-foreground">
             <Shield size={11} /><span>Acesso criptografado. Conformidade LGPD.</span>
           </div>
