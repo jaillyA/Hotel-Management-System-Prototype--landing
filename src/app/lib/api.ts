@@ -154,6 +154,8 @@ export const api = {
   reservations: {
     list: (status?: ReservationStatus) =>
       request<Reservation[]>(`/reservations${qs({ status_filter: status })}`),
+    create: (data: { guest_id: number; room_id: number; checkin: string; checkout: string; guests: number }) =>
+      request<Reservation>("/reservations", { method: "POST", body: JSON.stringify(data) }),
     update: (id: number, data: { status?: ReservationStatus; checkin?: string; checkout?: string; guests?: number }) =>
       request<Reservation>(`/reservations/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     services: {

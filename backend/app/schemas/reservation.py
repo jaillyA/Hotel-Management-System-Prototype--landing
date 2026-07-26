@@ -52,6 +52,7 @@ class ReservationRead(BaseModel):
     guest_id: int
     room_id: int
     guest_name: str
+    guest_cpf: str
     room_number: str
     room_type: RoomType
     checkin: date

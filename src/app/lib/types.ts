@@ -58,6 +58,7 @@ export interface Reservation {
   guest_id: number;
   room_id: number;
   guest_name: string;
+  guest_cpf: string;
   room_number: string;
   room_type: RoomType;
   checkin: string;

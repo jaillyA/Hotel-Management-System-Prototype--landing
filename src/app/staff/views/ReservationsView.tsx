@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { BedDouble, CalendarSearch, CheckCircle2, ChevronRight, Eye, LogOut, Search, X } from "lucide-react";
+import { BedDouble, CalendarPlus, CalendarSearch, CheckCircle2, ChevronRight, Eye, LogOut, Search, X } from "lucide-react";
 
 import { NAVY, serif } from "../../theme";
 import { GoldBtn, ResBadge, SHeader, formatDateBR, inputClass, labelClass, resStatusCfg } from "../../components/shared";
 import { ApiError, api } from "../../lib/api";
 import type { Reservation, ReservationStatus, RoomCatalogEntry } from "../../lib/types";
+import { CreateReservationModal } from "../modals/CreateReservationModal";
 import { ReservationServicesModal } from "../modals/ReservationServicesModal";
 import { useStaffAuth } from "../AuthContext";
 
@@ -26,6 +27,7 @@ export function ReservationsView() {
   const [availResults, setAvailResults] = useState<RoomCatalogEntry[] | null>(null);
   const [availLoading, setAvailLoading] = useState(false);
   const [availError, setAvailError] = useState<string | null>(null);
+  const [bookingRoom, setBookingRoom] = useState<RoomCatalogEntry | null>(null);
 
   function refetch() {
     setLoading(true);
@@ -72,10 +74,12 @@ export function ReservationsView() {
   const filtered = reservations.filter((r) => {
     if (!q) return true;
     const needle = q.toLowerCase();
+    const needleDigits = q.replace(/\D/g, "");
     return (
       r.guest_name.toLowerCase().includes(needle) ||
       r.code.toLowerCase().includes(needle) ||
-      r.room_number.toLowerCase().includes(needle)
+      r.room_number.toLowerCase().includes(needle) ||
+      (needleDigits.length > 0 && r.guest_cpf.replace(/\D/g, "").includes(needleDigits))
     );
   });
 
@@ -130,7 +134,18 @@ export function ReservationsView() {
                       <span className="text-xs text-muted-foreground">Cap. {room.capacity}</span>
                     </div>
                     {room.available ? (
-                      <span className="text-xs font-medium" style={{ color: "#3d8c6e" }}>Disponível · R$ {room.price}/noite</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-medium" style={{ color: "#3d8c6e" }}>Disponível · R$ {room.price}/noite</span>
+                        {canManage && (
+                          <button
+                            onClick={() => setBookingRoom(room)}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold text-white hover:brightness-110 transition-all"
+                            style={{ backgroundColor: NAVY }}
+                          >
+                            <CalendarPlus size={12} />Reservar
+                          </button>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-xs font-medium" style={{ color: "#B83232" }}>
                         {room.available_from ? `Indisponível — a partir de ${formatDateBR(room.available_from)}` : "Em manutenção"}
@@ -155,7 +170,7 @@ export function ReservationsView() {
         </div>
         <div className="relative flex-1 min-w-[220px]">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por hóspede, código ou quarto..."
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por hóspede, CPF, código ou quarto..."
             className="w-full pl-8 pr-4 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring/30" />
         </div>
       </div>
@@ -216,6 +231,20 @@ export function ReservationsView() {
         </div>
       )}
       {viewing && <ReservationServicesModal reservation={viewing} onClose={() => setViewing(null)} />}
+      {bookingRoom && (
+        <CreateReservationModal
+          room={bookingRoom}
+          checkin={availCheckin}
+          checkout={availCheckout}
+          guests={availPax}
+          onClose={() => setBookingRoom(null)}
+          onCreated={() => {
+            setBookingRoom(null);
+            refetch();
+            handleSearchAvailability();
+          }}
+        />
+      )}
     </div>
   );
 }

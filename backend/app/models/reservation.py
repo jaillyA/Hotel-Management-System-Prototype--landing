@@ -45,6 +45,10 @@ class Reservation(Base):
         return self.guest.name
 
     @property
+    def guest_cpf(self) -> str:
+        return self.guest.cpf
+
+    @property
     def room_number(self) -> str:
         return self.room.number
 

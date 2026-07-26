@@ -42,6 +42,10 @@ export function StaffFormModal({
       setError("Preencha todos os campos obrigatórios: nome, e-mail, CPF e papel.");
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      setError("Informe um e-mail válido.");
+      return;
+    }
     if (!initial && !form.password.trim()) {
       setError("Defina uma senha para o novo funcionário.");
       return;
