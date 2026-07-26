@@ -12,9 +12,11 @@ async def list_guests(db: AsyncSession, q: str | None = None, limit: int = 200) 
     query = select(Guest).order_by(Guest.name).limit(limit)
     if q:
         pattern = f"%{q.lower()}%"
-        query = query.where(
-            or_(func.lower(Guest.name).like(pattern), func.lower(Guest.email).like(pattern))
-        )
+        conditions = [func.lower(Guest.name).like(pattern), func.lower(Guest.email).like(pattern)]
+        digits = "".join(ch for ch in q if ch.isdigit())
+        if digits:
+            conditions.append(func.regexp_replace(Guest.cpf, r"\D", "", "g").like(f"%{digits}%"))
+        query = query.where(or_(*conditions))
     result = await db.execute(query)
     return list(result.scalars().all())
 
