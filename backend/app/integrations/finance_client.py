@@ -1,14 +1,11 @@
+import asyncio
+
 import httpx
 
 from app.core.config import settings
 
 TIMEOUT = httpx.Timeout(3.0)
-# O sistema financeiro externo, no free tier do Render, hiberna após
-# inatividade e pode levar bem mais que alguns segundos para "acordar".
-# Ações que o usuário pediu diretamente (registrar pagamento) esperam mais
-# tempo do que ações silenciosas (fatura automática na reserva), pra não
-# devolver um erro só porque o serviço ainda estava de pé.
-PAYMENT_TIMEOUT = httpx.Timeout(30.0)
+PAYMENT_TIMEOUT = httpx.Timeout(10.0)
 
 
 class FinanceServiceError(Exception):
@@ -59,24 +56,35 @@ def _extract_message(response: httpx.Response, fallback: str) -> str:
 
 
 async def register_payment(reservation_code: str, amount: float, payment_method: str) -> dict:
-    try:
-        async with httpx.AsyncClient(timeout=PAYMENT_TIMEOUT) as client:
-            response = await client.post(
-                f"{settings.finance_service_url}/payments",
-                json={
-                    "reservation_code": reservation_code,
-                    "amount": amount,
-                    "payment_method": payment_method,
-                },
+    payload = {
+        "reservation_code": reservation_code,
+        "amount": amount,
+        "payment_method": payment_method,
+    }
+    last_error: Exception | None = None
+    # No free tier do Render, um sistema financeiro hibernado costuma falhar
+    # rápido (não travar) na primeira requisição que o desperta; a segunda,
+    # já com o serviço de pé, funciona. Por isso vale tentar de novo uma vez
+    # antes de desistir, só para esta ação (o usuário está esperando o resultado).
+    for attempt in range(2):
+        try:
+            async with httpx.AsyncClient(timeout=PAYMENT_TIMEOUT) as client:
+                response = await client.post(
+                    f"{settings.finance_service_url}/payments", json=payload
+                )
+            if response.status_code < 400:
+                return response.json()
+            last_error = FinanceServiceError(
+                _extract_message(response, "Não foi possível registrar o pagamento.")
             )
-    except httpx.HTTPError as exc:
-        raise FinanceServiceError(
-            "Sistema financeiro indisponível. Tente novamente em alguns instantes."
-        ) from exc
-
-    if response.status_code >= 400:
-        raise FinanceServiceError(_extract_message(response, "Não foi possível registrar o pagamento."))
-    return response.json()
+        except httpx.HTTPError as exc:
+            last_error = FinanceServiceError(
+                "Sistema financeiro indisponível. Tente novamente em alguns instantes."
+            )
+            last_error.__cause__ = exc
+        if attempt == 0:
+            await asyncio.sleep(2)
+    raise last_error
 
 
 async def list_payments() -> list[dict]:
