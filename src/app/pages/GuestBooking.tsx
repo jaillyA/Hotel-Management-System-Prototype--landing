@@ -4,7 +4,7 @@ import {
 } from "lucide-react";
 
 import { CREAM, GOLD, NAVY, mono, sans, serif } from "../theme";
-import { GoldBtn, OutlineBtn, formatDateBR, inputClass, labelClass } from "../components/shared";
+import { GoldBtn, OutlineBtn, formatCPF, formatDateBR, formatPhoneBR, inputClass, labelClass } from "../components/shared";
 import { ApiError, api } from "../lib/api";
 import type { Reservation, Room, RoomCatalogEntry, RoomType } from "../lib/types";
 import type { BookingSearchParams } from "./LandingPage";
@@ -24,7 +24,7 @@ export function GuestBooking({
   const [step, setStep] = useState<Step>(hasInitialSearch ? "select" : "search");
   const [checkin, setCI] = useState(initial?.checkin ?? "");
   const [checkout, setCO] = useState(initial?.checkout ?? "");
-  const [pax, setPax] = useState(initial?.pax ?? 2);
+  const [pax, setPax] = useState<number | "">(initial?.pax ?? "");
   const [typeF, setTypeF] = useState<RoomType | "Todos">("Todos");
   const [picked, setPicked] = useState<Room | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", cpf: "", notes: "" });
@@ -42,7 +42,7 @@ export function GuestBooking({
     setLoading(true);
     setError(null);
     api.rooms
-      .catalog(checkin, checkout, pax, typeF === "Todos" ? undefined : typeF)
+      .catalog(checkin, checkout, Number(pax), typeF === "Todos" ? undefined : typeF)
       .then(setAvailable)
       .catch((err) => setError(err instanceof ApiError ? err.message : "Não foi possível buscar os quartos."))
       .finally(() => setLoading(false));
@@ -70,7 +70,7 @@ export function GuestBooking({
         room_id: picked.id,
         checkin,
         checkout,
-        guests: pax,
+        guests: Number(pax),
         guest_name: form.name,
         guest_email: form.email,
         guest_phone: form.phone,
@@ -176,7 +176,8 @@ export function GuestBooking({
               {error && <p className="text-xs text-red-500">{error}</p>}
               <GoldBtn
                 onClick={() => {
-                  if (!checkin || !checkout) { setError("Selecione as datas de check-in e check-out."); return; }
+                  if (!checkin || !checkout || !pax) { setError("Selecione as datas de check-in, check-out e o número de hóspedes."); return; }
+                  if (checkout <= checkin) { setError("O check-out deve ser depois do check-in."); return; }
                   setError(null);
                   setStep("select");
                 }}
@@ -193,7 +194,7 @@ export function GuestBooking({
             <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
               <div>
                 <h2 className="text-2xl font-bold" style={{ fontFamily: serif, color: NAVY }}>Quartos</h2>
-                <p className="text-sm text-muted-foreground mt-0.5">{checkin} → {checkout} · {pax} hóspede{pax > 1 ? "s" : ""} · {nights} noite{nights > 1 ? "s" : ""}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">{checkin} → {checkout} · {pax} hóspede{Number(pax) > 1 ? "s" : ""} · {nights} noite{nights > 1 ? "s" : ""}</p>
               </div>
               <div className="flex gap-2 flex-wrap">
                 {(["Todos", "Standard", "Luxo", "Suite", "Presidencial"] as const).map((f) => (
@@ -287,11 +288,11 @@ export function GuestBooking({
                 </div>
                 <div>
                   <label className={labelClass}>Telefone *</label>
-                  <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(11) 99999-9999" className={inputClass} />
+                  <input value={form.phone} onChange={(e) => setForm({ ...form, phone: formatPhoneBR(e.target.value) })} placeholder="(11) 99999-9999" className={inputClass} />
                 </div>
                 <div className="sm:col-span-2">
                   <label className={labelClass}>CPF *</label>
-                  <input value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder="000.000.000-00" className={inputClass} />
+                  <input value={form.cpf} onChange={(e) => setForm({ ...form, cpf: formatCPF(e.target.value) })} placeholder="000.000.000-00" className={inputClass} />
                 </div>
                 <div className="sm:col-span-2">
                   <label className={labelClass}>Pedidos Especiais</label>

@@ -1,6 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.room import RoomStatus, RoomType
 
@@ -9,8 +9,8 @@ class RoomBase(BaseModel):
     number: str
     floor: int
     type: RoomType
-    capacity: int
-    price: float
+    capacity: int = Field(gt=0, le=20)
+    price: float = Field(gt=0)
     amenities: list[str] = []
     img: str | None = None
 
@@ -24,8 +24,8 @@ class RoomUpdate(BaseModel):
     floor: int | None = None
     type: RoomType | None = None
     status: RoomStatus | None = None
-    capacity: int | None = None
-    price: float | None = None
+    capacity: int | None = Field(default=None, gt=0, le=20)
+    price: float | None = Field(default=None, gt=0)
     amenities: list[str] | None = None
     img: str | None = None
 

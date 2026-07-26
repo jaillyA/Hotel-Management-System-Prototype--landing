@@ -20,8 +20,8 @@ export function RoomFormModal({
   const [form, setForm] = useState({
     number: initial?.number ?? "",
     floor: initial?.floor ?? 1,
-    type: initial?.type ?? "Standard",
-    status: initial?.status ?? "disponivel",
+    type: initial?.type ?? ("" as RoomType | ""),
+    status: initial?.status ?? ("" as RoomStatus | ""),
     capacity: initial?.capacity ?? 2,
     price: initial?.price ?? 0,
     amenities: initial?.amenities.join(", ") ?? "",
@@ -33,6 +33,18 @@ export function RoomFormModal({
   async function submit() {
     if (!form.number.trim()) {
       setError("O número do quarto é obrigatório.");
+      return;
+    }
+    if (!form.type || !form.status) {
+      setError("Selecione o tipo e o status do quarto.");
+      return;
+    }
+    if (!form.price || Number(form.price) <= 0) {
+      setError("O preço por noite deve ser maior que zero.");
+      return;
+    }
+    if (!form.capacity || Number(form.capacity) <= 0) {
+      setError("A capacidade deve ser maior que zero.");
       return;
     }
     setSaving(true);
@@ -75,23 +87,25 @@ export function RoomFormModal({
           </div>
           <div>
             <label className={labelClass}>Tipo</label>
-            <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className={inputClass}>
+            <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as RoomType })} className={inputClass}>
+              <option value="">Selecione...</option>
               {ROOM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           <div>
             <label className={labelClass}>Status</label>
-            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className={inputClass}>
+            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as RoomStatus })} className={inputClass}>
+              <option value="">Selecione...</option>
               {ROOM_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
           <div>
             <label className={labelClass}>Capacidade</label>
-            <input type="number" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })} className={inputClass} />
+            <input type="number" min={1} max={20} value={form.capacity} onChange={(e) => setForm({ ...form, capacity: Math.max(1, Math.min(20, Number(e.target.value))) })} className={inputClass} />
           </div>
           <div>
             <label className={labelClass}>Preço/noite (R$)</label>
-            <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className={inputClass} />
+            <input type="number" min={0.01} step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: Math.max(0, Number(e.target.value)) })} className={inputClass} />
           </div>
           <div className="col-span-2">
             <label className={labelClass}>Comodidades (separadas por vírgula)</label>

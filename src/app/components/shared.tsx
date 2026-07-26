@@ -176,3 +176,21 @@ export function formatDateBR(iso: string): string {
   const [year, month, day] = iso.split("-");
   return `${day}/${month}/${year}`;
 }
+
+export function formatCPF(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  const parts = [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6, 9)].filter(Boolean);
+  let result = parts.join(".");
+  if (digits.length > 9) result += `-${digits.slice(9, 11)}`;
+  return result;
+}
+
+export function formatPhoneBR(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 2) return digits.length ? `(${digits}` : "";
+  const ddd = digits.slice(0, 2);
+  const rest = digits.slice(2);
+  if (rest.length <= 4) return `(${ddd}) ${rest}`;
+  if (digits.length <= 10) return `(${ddd}) ${rest.slice(0, 4)}-${rest.slice(4)}`;
+  return `(${ddd}) ${rest.slice(0, 5)}-${rest.slice(5, 9)}`;
+}

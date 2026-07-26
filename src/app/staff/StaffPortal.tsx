@@ -35,6 +35,7 @@ const sideNav: { id: StaffPage; label: string; icon: React.ReactNode }[] = [
 export function StaffPortal({ role, onLogout }: { role: StaffRole; onLogout: () => void }) {
   const [view, setView] = useState<StaffPage>("dashboard");
   const [sideOpen, setSideOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     setUnauthorizedHandler(onLogout);
@@ -44,7 +45,7 @@ export function StaffPortal({ role, onLogout }: { role: StaffRole; onLogout: () 
   const renderView = () => {
     switch (view) {
       case "dashboard": return <DashboardView />;
-      case "quartos": return <RoomsView />;
+      case "quartos": return <RoomsView query={query} />;
       case "hospedes": return <GuestsView />;
       case "reservas": return <ReservationsView />;
       case "funcionarios": return <StaffView />;
@@ -71,7 +72,7 @@ export function StaffPortal({ role, onLogout }: { role: StaffRole; onLogout: () 
           </div>
           <nav className="flex-1 px-2 py-3 overflow-y-auto space-y-0.5">
             {sideNav.map((item) => (
-              <button key={item.id} onClick={() => { setView(item.id); setSideOpen(false); }}
+              <button key={item.id} onClick={() => { setView(item.id); setSideOpen(false); setQuery(""); }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
                 style={{ backgroundColor: view === item.id ? "#1E2D4A" : "transparent", color: view === item.id ? "white" : "rgba(200,194,180,0.65)" }}>
                 <span style={{ color: view === item.id ? GOLD : undefined }}>{item.icon}</span>
@@ -100,7 +101,14 @@ export function StaffPortal({ role, onLogout }: { role: StaffRole; onLogout: () 
               <button className="lg:hidden p-1.5 rounded hover:bg-muted transition-colors" onClick={() => setSideOpen(true)}><Menu size={16} className="text-foreground" /></button>
               <div className="relative hidden sm:block">
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input placeholder="Buscar..." className="pl-8 pr-4 py-2 bg-muted rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none w-48" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={view === "quartos" ? "Buscar por número ou tipo..." : "Buscar..."}
+                  disabled={view !== "quartos"}
+                  title={view !== "quartos" ? "Disponível na tela de Quartos" : undefined}
+                  className="pl-8 pr-4 py-2 bg-muted rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none w-48 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
               </div>
             </div>
             <div className="flex items-center gap-2">

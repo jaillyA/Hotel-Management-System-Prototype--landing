@@ -48,7 +48,8 @@ export function LandingPage({
   const [menuOpen, setMenuOpen] = useState(false);
   const [checkin, setCheckin] = useState("");
   const [checkout, setCheckout] = useState("");
-  const [pax, setPax] = useState(2);
+  const [pax, setPax] = useState<number | "">("");
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 50);
@@ -136,13 +137,19 @@ export function LandingPage({
               ))}
               <div className="text-left">
                 <label className="text-xs text-white/55 block mb-1.5 uppercase tracking-widest">Hóspedes</label>
-                <select value={pax} onChange={(e) => setPax(Number(e.target.value))}
+                <select value={pax} onChange={(e) => setPax(e.target.value ? Number(e.target.value) : "")}
                   className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/50">
+                  <option value="" className="text-foreground bg-white">Selecione...</option>
                   {[1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n} className="text-foreground bg-white">{`${n} ${n === 1 ? "hóspede" : "hóspedes"}`}</option>)}
                 </select>
               </div>
             </div>
-            <GoldBtn onClick={() => onBook({ checkin, checkout, pax })} full lg>
+            {searchError && <p className="text-xs text-left mb-3" style={{ color: "#ffb4b4" }}>{searchError}</p>}
+            <GoldBtn onClick={() => {
+              if (!checkin || !checkout || !pax) { setSearchError("Selecione check-in, check-out e o número de hóspedes."); return; }
+              setSearchError(null);
+              onBook({ checkin, checkout, pax: Number(pax) });
+            }} full lg>
               <Search size={17} />Verificar Disponibilidade
             </GoldBtn>
           </div>

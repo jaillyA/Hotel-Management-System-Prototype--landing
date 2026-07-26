@@ -8,7 +8,7 @@ import type { Room, RoomStatus } from "../../lib/types";
 import { RoomFormModal } from "../modals/RoomFormModal";
 import { useStaffAuth } from "../AuthContext";
 
-export function RoomsView() {
+export function RoomsView({ query = "" }: { query?: string }) {
   const { role } = useStaffAuth();
   const canManage = role === "administrador" || role === "gerente";
 
@@ -40,7 +40,11 @@ export function RoomsView() {
     }
   }
 
-  const filtered = filter === "todos" ? rooms : rooms.filter((r) => r.status === filter);
+  const byStatus = filter === "todos" ? rooms : rooms.filter((r) => r.status === filter);
+  const needle = query.trim().toLowerCase();
+  const filtered = needle
+    ? byStatus.filter((r) => r.number.toLowerCase().includes(needle) || r.type.toLowerCase().includes(needle))
+    : byStatus;
 
   return (
     <div>
@@ -57,6 +61,10 @@ export function RoomsView() {
       {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando quartos...</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-8 text-center">
+          {needle ? `Nenhum quarto encontrado para "${query}".` : "Nenhum quarto encontrado."}
+        </p>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {filtered.map((room) => (

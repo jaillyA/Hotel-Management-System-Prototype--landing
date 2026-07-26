@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../../components/ui/dialog";
-import { GoldBtn, OutlineBtn, inputClass, labelClass } from "../../components/shared";
+import { GoldBtn, OutlineBtn, formatCPF, formatPhoneBR, inputClass, labelClass } from "../../components/shared";
 import { ApiError, api } from "../../lib/api";
 import type { Guest } from "../../lib/types";
 
@@ -63,7 +63,7 @@ export function GuestFormModal({
           </div>
           <div>
             <label className={labelClass}>Telefone *</label>
-            <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputClass} />
+            <input value={form.phone} onChange={(e) => setForm({ ...form, phone: formatPhoneBR(e.target.value) })} placeholder="(11) 99999-9999" className={inputClass} />
           </div>
           <div>
             <label className={labelClass}>CPF *</label>
@@ -71,7 +71,8 @@ export function GuestFormModal({
               <input
                 type={showCpf ? "text" : "password"}
                 value={form.cpf}
-                onChange={(e) => setForm({ ...form, cpf: e.target.value })}
+                onChange={(e) => setForm({ ...form, cpf: formatCPF(e.target.value) })}
+                placeholder="000.000.000-00"
                 className={`${inputClass} pr-9`}
               />
               <button
