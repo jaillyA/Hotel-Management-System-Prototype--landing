@@ -9,13 +9,15 @@ class RoomBase(BaseModel):
     number: str
     floor: int
     type: RoomType
-    capacity: int = Field(gt=0, le=20)
-    price: float = Field(gt=0)
+    capacity: int
+    price: float
     amenities: list[str] = []
     img: str | None = None
 
 
 class RoomCreate(RoomBase):
+    capacity: int = Field(gt=0, le=20)
+    price: float = Field(gt=0)
     status: RoomStatus = RoomStatus.disponivel
 
 
