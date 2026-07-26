@@ -3,6 +3,12 @@ import httpx
 from app.core.config import settings
 
 TIMEOUT = httpx.Timeout(3.0)
+# O sistema financeiro externo, no free tier do Render, hiberna após
+# inatividade e pode levar bem mais que alguns segundos para "acordar".
+# Ações que o usuário pediu diretamente (registrar pagamento) esperam mais
+# tempo do que ações silenciosas (fatura automática na reserva), pra não
+# devolver um erro só porque o serviço ainda estava de pé.
+PAYMENT_TIMEOUT = httpx.Timeout(30.0)
 
 
 class FinanceServiceError(Exception):
@@ -32,7 +38,7 @@ async def register_invoice(
 
 async def list_invoices() -> list[dict]:
     try:
-        async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=PAYMENT_TIMEOUT) as client:
             response = await client.get(f"{settings.finance_service_url}/invoices")
             response.raise_for_status()
             return response.json()
@@ -54,7 +60,7 @@ def _extract_message(response: httpx.Response, fallback: str) -> str:
 
 async def register_payment(reservation_code: str, amount: float, payment_method: str) -> dict:
     try:
-        async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=PAYMENT_TIMEOUT) as client:
             response = await client.post(
                 f"{settings.finance_service_url}/payments",
                 json={
@@ -75,7 +81,7 @@ async def register_payment(reservation_code: str, amount: float, payment_method:
 
 async def list_payments() -> list[dict]:
     try:
-        async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=PAYMENT_TIMEOUT) as client:
             response = await client.get(f"{settings.finance_service_url}/payments")
             response.raise_for_status()
             return response.json()
